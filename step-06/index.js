@@ -44,8 +44,7 @@ io.on('connection', function(socket) {
       // io.sockets.in(room).emit('join', room);
       socket.join(room);
       socket.emit('joined', room, socket.id);
-      io.sockets.in(room).emit('ready', room);
-      socket.broadcast.emit('ready', room);
+      socket.to(room).emit('ready', room);
     } else { // max two clients
       socket.emit('full', room);
     }
