@@ -197,14 +197,15 @@ var peerConn;
 var dataChannel;
 
 function signalingMessageCallback(message) {
-  if (message.type === 'offer') {
+  if (message.type === 'offer' || message.type == 0) {
+    if (message.type == 0) message.type = 'offer';
     console.log('Got offer. Sending answer to peer.');
     peerConn.setRemoteDescription(message)
     .then(() => peerConn.createAnswer())
     .then((answer) => onLocalSessionCreated(answer))
     .catch(logError);
 
-  } else if (message.type === 'answer') {
+  } else if (message.type === 'answer' || message.type == 2) {
     console.log('Got answer.');
     if (message.type == 2) message.type = 'answer';
     peerConn.setRemoteDescription(message)
