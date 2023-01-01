@@ -21,8 +21,8 @@ var snapBtn = document.getElementById('snap');
 var sendBtn = document.getElementById('send');
 var snapAndSendBtn = document.getElementById('snapAndSend');
 
-var photoContextW;
-var photoContextH;
+var photoContextW = 640;
+var photoContextH = 480;
 
 // Attach event handlers
 snapBtn.addEventListener('click', snapPhoto);
@@ -161,14 +161,16 @@ function sendMessage(message) {
 
 function grabWebCamVideo() {
   console.log('Getting user media (video) ...');
-  navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: true
-  })
-  .then(gotStream)
-  .catch(function(e) {
-    alert('getUserMedia() error: ' + e.name);
-  });
+  if (navigator.mediaDevices) {
+    navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: true
+    })
+    .then(gotStream)
+    .catch(function(e) {
+      alert('getUserMedia() error: ' + e.name);
+    });
+  }
 }
 
 function gotStream(stream) {
