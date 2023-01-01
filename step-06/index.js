@@ -67,7 +67,21 @@ io.sockets.on('connection', function(socket) {
     socket.broadcast.emit('bye');
   });
 
-  socket.on('bye', function(room) {
+  socket.on('bye', function({room, isInitiator}) {
     console.log(`Peer said bye on room ${room}.`);
+    console.log('was init', isInitiator);
+    if (isInitiator) {
+      try {
+        let sent = false;
+        [...io.of("/").adapter.rooms.get(room)].forEach(k => {
+          console.log(k);
+          if (!sent && k !== socket.id) {
+            socket.to(k).emit('newHost');
+            sent = true;
+          }
+        })
+      } catch {}
+    }
+    socket.leave(room);
   });
 });

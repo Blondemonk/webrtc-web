@@ -39,6 +39,7 @@ var room = window.location.hash.substring(1);
 if (!room) {
   room = window.location.hash = randomToken();
 }
+let id = '';
 
 
 /****************************************************************************
@@ -56,6 +57,7 @@ socket.on('ipaddr', function(ipaddr) {
 socket.on('created', function(room, clientId) {
   console.log('Created room', room, '- my client ID is', clientId);
   isInitiator = true;
+  id = clientId;
   roomURL.innerText = 'Created room ' + room + ' - my client ID is ' + clientId;
   grabWebCamVideo();
 });
@@ -63,6 +65,7 @@ socket.on('created', function(room, clientId) {
 socket.on('joined', function(room, clientId) {
   console.log('This peer has joined room', room, 'with client ID', clientId);
   isInitiator = false;
+  id = clientId;
   roomURL.innerText = 'This peer has joined room ' + room + ' with client ID ' + clientId;
   createPeerConnection(isInitiator, configuration);
   grabWebCamVideo();
@@ -112,9 +115,22 @@ socket.on('bye', function(room) {
   }
 });
 
+socket.on('newHost', () => {
+  console.log('newHost');
+  roomURL.innerText = 'Now hosting room ' + room + ' - my client ID is ' + id;
+  isInitiator = true;
+});
+
 window.addEventListener('unload', function() {
   console.log(`Unloading window. Notifying peers in ${room}.`);
-  socket.emit('bye', room);
+  socket.emit('bye', {
+    room, 
+    isInitiator
+  });
+  console.log('bye', {
+    room, 
+    isInitiator
+  })
 });
 
 
