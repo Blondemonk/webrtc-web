@@ -64,9 +64,9 @@ io.on('connection', function(socket) {
     }
   });
 
-  socket.on('disconnect', function(reason) {
+  socket.on('disconnecting', function(reason) {
     console.log(`Peer or server disconnected. Reason: ${reason}.`);
-    socket.broadcast.emit('bye');
+    [...socket.rooms].forEach((k) => socket.to(k).emit('bye'));
   });
 
   socket.on('bye', function({room, isInitiator}) {
