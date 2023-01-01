@@ -12,7 +12,7 @@
 
 var configuration = null;
 
-// var roomURL = document.getElementById('url');
+var roomURL = document.getElementById('url');
 var video = document.querySelector('video');
 var photo = document.getElementById('photo');
 var photoContext = photo.getContext('2d');
@@ -56,12 +56,14 @@ socket.on('ipaddr', function(ipaddr) {
 socket.on('created', function(room, clientId) {
   console.log('Created room', room, '- my client ID is', clientId);
   isInitiator = true;
+  roomURL.innerText = 'Created room ' + room + ' - my client ID is ' + clientId;
   grabWebCamVideo();
 });
 
 socket.on('joined', function(room, clientId) {
   console.log('This peer has joined room', room, 'with client ID', clientId);
   isInitiator = false;
+  roomURL.innerText = 'This peer has joined room ' + room + ' with client ID ' + clientId;
   createPeerConnection(isInitiator, configuration);
   grabWebCamVideo();
 });
