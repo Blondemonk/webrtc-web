@@ -49,6 +49,10 @@ let id = '';
 // Connect to the signaling server
 var socket = io();
 
+socket.on("connect", () => {
+  console.log('connect', socket.id);
+});
+
 socket.on('ipaddr', function(ipaddr) {
   console.log('Server IP address is: ' + ipaddr);
   // updateRoomURL(ipaddr);
@@ -264,10 +268,12 @@ function createPeerConnection(isInitiator, config) {
 
 function onLocalSessionCreated(desc) {
   console.log('local session created:', desc);
-  peerConn.setLocalDescription(desc).then(function() {
-    console.log('sending local desc:', peerConn.localDescription);
-    sendMessage(peerConn.localDescription);
-  }).catch(logError);
+  peerConn.setLocalDescription(desc)
+    .then(() => {
+      console.log('sending local desc:', desc);
+      sendMessage(desc);
+    })
+    .catch(logError);
 }
 
 function onDataChannelCreated(channel) {
