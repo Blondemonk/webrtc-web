@@ -193,20 +193,22 @@ var dataChannel;
 function signalingMessageCallback(message) {
   if (message.type === 'offer') {
     console.log('Got offer. Sending answer to peer.');
-    peerConn.setRemoteDescription(new RTCSessionDescription(message), function() {},
-                                  logError);
-    peerConn.createAnswer(onLocalSessionCreated, logError);
+    peerConn.setRemoteDescription(message)
+    .then(() => peerConn.createAnswer())
+    .then((answer) => onLocalSessionCreated(answer))
+    .catch(logError);
 
   } else if (message.type === 'answer') {
     console.log('Got answer.');
-    peerConn.setRemoteDescription(new RTCSessionDescription(message), function() {},
-                                  logError);
+    if (message.type == 2) message.type = 'answer';
+    peerConn.setRemoteDescription(message)
+      .catch(logError);
 
   } else if (message.type === 'candidate') {
     peerConn.addIceCandidate(new RTCIceCandidate({
       candidate: message.candidate,
-      sdpMLineIndex: message.label,
-      sdpMid: message.id
+      sdpMLineIndex: message.sdpMLineIndex,
+      sdpMid: message.sdpMid
     }));
     
   }
@@ -217,43 +219,45 @@ function createPeerConnection(isInitiator, config) {
               config);
   peerConn = new RTCPeerConnection(config);
 
-// send any ice candidates to the other peer
-peerConn.onicecandidate = function(event) {
-  console.log('icecandidate event:', event);
-  if (event.candidate) {
-    sendMessage({
-      type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate
-    });
-  } else {
-    console.log('End of candidates.');
-  }
-};
-
-if (isInitiator) {
-  console.log('Creating Data Channel');
-  dataChannel = peerConn.createDataChannel('photos');
-  onDataChannelCreated(dataChannel);
-
-  console.log('Creating an offer');
-  peerConn.createOffer().then(function(offer) {
-    return peerConn.setLocalDescription(offer);
-  })
-  .then(() => {
-    console.log('sending local desc:', peerConn.localDescription);
-    sendMessage(peerConn.localDescription);
-  })
-  .catch(logError);
-
-} else {
-  peerConn.ondatachannel = function(event) {
-    console.log('ondatachannel:', event.channel);
-    dataChannel = event.channel;
-    onDataChannelCreated(dataChannel);
+  // send any ice candidates to the other peer
+  peerConn.onicecandidate = function(event) {
+    console.log('icecandidate event:', event);
+    if (event.candidate) {
+      sendMessage({
+        type: 'candidate',
+        sdpMLineIndex: event.candidate.sdpMLineIndex,
+        sdpMid: event.candidate.sdpMid,
+        candidate: event.candidate.candidate
+      });
+    } else {
+      console.log('End of candidates.');
+    }
   };
-}
+
+  if (isInitiator) {
+    console.log('Creating Data Channel');
+    dataChannel = peerConn.createDataChannel('photos');
+    onDataChannelCreated(dataChannel);
+
+    console.log('Creating an offer');
+    peerConn.createOffer()
+      .then((offer) => {
+        console.log('offer', offer);
+        return peerConn.setLocalDescription(offer);
+      })
+      .then(() => {
+        console.log('sending local desc:', peerConn.localDescription);
+        sendMessage(peerConn.localDescription);
+      })
+      .catch(logError);
+
+  } else {
+    peerConn.ondatachannel = function(event) {
+      console.log('ondatachannel:', event.channel);
+      dataChannel = event.channel;
+      onDataChannelCreated(dataChannel);
+    };
+  }
 }
 
 function onLocalSessionCreated(desc) {
@@ -301,11 +305,11 @@ function receiveDataChromeFactory() {
     console.log('count: ' + count);
 
     if (count === buf.byteLength) {
-// we're done: all data chunks have been received
-console.log('Done. Rendering photo.');
-renderPhoto(buf);
-}
-};
+      // we're done: all data chunks have been received
+      console.log('Done. Rendering photo.');
+      renderPhoto(buf);
+    }
+  };
 }
 
 function receiveDataFirefoxFactory() {
