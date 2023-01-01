@@ -47,7 +47,7 @@ let id = '';
 ****************************************************************************/
 
 // Connect to the signaling server
-var socket = io.connect();
+var socket = io();
 
 socket.on('ipaddr', function(ipaddr) {
   console.log('Server IP address is: ' + ipaddr);

@@ -10,9 +10,9 @@ var app = http.createServer(function(req, res) {
   fileServer.serve(req, res);
 }).listen(8080);
 
-var io = socketIO.listen(app);
-io.sockets.on('connection', function(socket) {
+var io = new socketIO.Server(app);
 
+io.on('connection', function(socket) {
   // convenience function to log server messages on the client
   function log() {
     var array = ['Message from server:'];
@@ -31,9 +31,9 @@ io.sockets.on('connection', function(socket) {
   socket.on('create or join', function(room) {
     log('Received request to create or join room ' + room);
 
-    var clientsInRoom = io.sockets.adapter.rooms[room];
-    var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-    log('Room ' + room + ' now has ' + numClients + ' client(s)');
+    var clientsInRoom = io.of("/").adapter.rooms.get(room);
+    var numClients = clientsInRoom ? clientsInRoom.size : 0;
+    log('Room ' + room + ' currently has ' + numClients + ' client(s)');
 
     if (numClients === 0) {
       socket.join(room);
@@ -49,6 +49,9 @@ io.sockets.on('connection', function(socket) {
     } else { // max two clients
       socket.emit('full', room);
     }
+    var clientsInRoom = io.of("/").adapter.rooms.get(room);
+    var numClients = clientsInRoom ? clientsInRoom.size : 0;
+    log('Room ' + room + ' now has ' + numClients + ' client(s)');
   });
 
   socket.on('ipaddr', function() {
